@@ -1,4 +1,6 @@
 <?php
+
+            include('adminheader.inc');
             /*
                 Inlcude our config file
                 "Inculde" includes AND evaluates (i.e. executes the PHP code) 
@@ -6,7 +8,10 @@
                 Any variables available at that line in the calling file will
                 be available within the called file, from that point forward. 
             */
-            include('config.inc');
+            include('../config.inc');
+
+            // Message variable - if it is set, it will be displayed in an alert...
+            $msg = ""; 
 
             /***
              * 
@@ -56,7 +61,6 @@
                     FIRST step: create a statement.
                 */
                 $sqlStmt = "INSERT INTO `phrases` (`id`, `phrase`, `publishdate`) VALUES (NULL, '" . $text . "', NOW())";
-
                 // in case of a promlem, display $sqlStmt, copy it and enter it in SQL-area of PhpMyAdmin
 
                 /* 
@@ -72,7 +76,7 @@
                 */
                 if(!empty($link->error)){
                     echo $link->error;
-                    die();     
+                    die("error");     
                 }
 
                 /* 
@@ -94,10 +98,32 @@
                     $_SERVER['PHP_SELF'] in a script at the address 
                     http://example.com/foo/bar.php would be /foo/bar.php
                 */
-                // header('Location: '. $_SERVER['PHP_SELF']);
+                header('Location: '. $_SERVER['PHP_SELF']);
                 die();            
             }
             
+            /***
+             * 
+             * DELETE DATA 
+             * 
+             */
+            if(isset($_GET['delete-id'])){
+                $sqlStmt = "DELETE FROM `phrases` WHERE `phrases`.`id` = " . $_GET['delete-id'];
+                $result = $link->query($sqlStmt);            
+    
+                $deleteCount = 0; 
+                if ($link->affected_rows == 0){
+                    die ("nichts gelöscht!!!");
+                }
+                else {
+                    $deleteCount = $link->affected_rows; 
+                    $msg = $deleteCount .= " Zeilen gelöscht";
+                }                
+            }
+
+
+
+
             /***
              * 
              * READ DATA 
@@ -107,10 +133,8 @@
             /* 
                 FIRST step: Create SQL-Statement that we need to query the DB
             */
-           $sqlStmt = "SELECT * FROM `phrases`";
 
-           // if you want to change the order, use this... 
-           // $sqlStmt = "SELECT * FROM `phrases` ORDER BY id DESC";
+            $sqlStmt = "SELECT * FROM `phrases` ORDER BY id DESC";
 
             /* 
                 SECOND step: submit statememt to DB
@@ -182,49 +206,28 @@
     </head>
     <body>
         <main role="main">
+        
+        <?php 
+                // if msg is set, show msg in layer 
+                if ($msg != ""){
+                    echo '<div class="alert alert-secondary" role="alert">'; 
+                    echo $msg; 
+                    echo '</div>'; 
+                }
+        ?>
 
         <h1>I say YES to... </h1>
 
-
-        <!-- a form tag -->
-        <form>
-            <div class="row">
-                <div class="col-md-3">
-                    <select name="phrase_01" class="form-control">
-                        <option>Unkaputtbare</option>
-                        <option>Dumm</option>
-                        <option>Transplantiert</option>   
-                    </select>
+        <div class="row">
+                <div class="col-md-10">
                 </div>
-                <div class="col-md-3">
-                    <select name="phrase_02" class="form-control">
-                        <option>besoffene(r/s)</option>
-                        <option>unantastbar(e/er/es)</option>
-                        <option>saftig(e/er/es)</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select name="phrase_03" class="form-control">
-                        <option>Kartoffelsalat</option>
-                        <option>Oachkoatzalschwaof</option>
-                        <option>Applecrumble</option>
-                        <option>Schietwetter</option>
-                        <option>Ma&szlig;</option>                
-                    </select>     
-                </div>                
-            </div>        
-            <!-- drop-down menus for the different phrases - add some nonsense here -->
-            <div class="row" style="margin-top: 20px">
-                <div class="col-md-6">please submit your phrase
-                </div>
-                <div class="col-md-3">
-                    <input type="submit" class="form-control btn btn-success">
-                </div>
-            </div>
+                <div class="col-md-2">
+                    <a href="phrase_add.php"  class="btn btn-success">Add new phrase</a>
+               </div>
         </div>
 
-        </form>
         <hr style="margin: 40px 0px 40px 0px ">
+
         <?php
 
             echo "<h4>". count($statements) . " unglaublich großartige Sätze sind schon gespeichert!!! Mehr davon!</h4>"; 
@@ -249,6 +252,8 @@
                 echo "<th scope='col'>#</th>"; 
                 echo "<th scope='col'>Phrase</th>"; 
                 echo "<th scope='col'>Date</th>"; 
+                echo "<th scope='col'>Delete</th>"; 
+                echo "<th scope='col'>Edit</th>"; 
                 echo "</tr>"; 
                 echo "</thead>";                 
                 foreach($statements as $stmt){
@@ -256,7 +261,9 @@
                         echo "<td>" . $stmt['id'] . "</td>";
                         echo "<td>" . $stmt['phrase'] . "</td>";
                         echo "<td>" . $stmt['publishdate'] . "</td>";
-                    echo "</tr>";            }
+                        echo "<td><a href='?delete-id=" . $stmt['id'] . "'>delete</a></td>"; 
+                        echo "<td><a href='phrase_edit.php?edit-id=" . $stmt['id'] . "'>edit</a></td>"; 
+                        echo "</tr>";            }
                 echo "</table>";
             }
             else {
@@ -266,7 +273,7 @@
         </main>
 
         <?php
-            include('footer.inc');
+            include('../footer.inc');
         ?>
 
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

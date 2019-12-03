@@ -1,4 +1,6 @@
 <?php
+
+            include('adminheader.inc');
             /*
                 Inlcude our config file
                 "Inculde" includes AND evaluates (i.e. executes the PHP code) 
@@ -6,7 +8,10 @@
                 Any variables available at that line in the calling file will
                 be available within the called file, from that point forward. 
             */
-            include('config.inc');
+            include('../config.inc');
+
+            // Message variable - if it is set, it will be displayed in an alert...
+            $msg = ""; 
 
             /***
              * 
@@ -56,7 +61,6 @@
                     FIRST step: create a statement.
                 */
                 $sqlStmt = "INSERT INTO `phrases` (`id`, `phrase`, `publishdate`) VALUES (NULL, '" . $text . "', NOW())";
-
                 // in case of a promlem, display $sqlStmt, copy it and enter it in SQL-area of PhpMyAdmin
 
                 /* 
@@ -72,7 +76,7 @@
                 */
                 if(!empty($link->error)){
                     echo $link->error;
-                    die();     
+                    die("error");     
                 }
 
                 /* 
@@ -94,84 +98,10 @@
                     $_SERVER['PHP_SELF'] in a script at the address 
                     http://example.com/foo/bar.php would be /foo/bar.php
                 */
-                // header('Location: '. $_SERVER['PHP_SELF']);
+                header('Location: index.php');
                 die();            
             }
             
-            /***
-             * 
-             * READ DATA 
-             * 
-             */
-
-            /* 
-                FIRST step: Create SQL-Statement that we need to query the DB
-            */
-           $sqlStmt = "SELECT * FROM `phrases`";
-
-           // if you want to change the order, use this... 
-           // $sqlStmt = "SELECT * FROM `phrases` ORDER BY id DESC";
-
-            /* 
-                SECOND step: submit statememt to DB
-            */
-           $result = $link->query($sqlStmt);
-
-           if (!empty(mysqli_error($link))){
-                echo "ACHTUNG BÖSER FEHLER!!! ";
-                echo mysqli_error($link);
-                die();
-           }
-
-            /* 
-                THIRD step: handle results
-                if there is more than one row in result set
-                store this data in variable $statements
-
-            */
-           $statements = array(); 
-           
-           if ($result->num_rows > 0){
-               while($row = mysqli_fetch_assoc($result)){
-                   /* 
-                    add a new item to $statements array
-
-                    ATTENTION: We put an array into an array here!
-                        the statement array contains an associative array
-                        with the fields id, phrase, publishdate
-                   */
-                   $statements[] = array(
-                       'id' => $row['id'], 
-                       'phrase' => $row['phrase'],
-                       'publishdate' => $row['publishdate'] 
-                   );
-
-
-               }
-           }
-           else {
-               echo ("no results found");
-           }             
-
-/*             
-            // This was used when reading data from a file... 
-            // $statements = file_get_contents($filename);
-            // $statements = file($filename, FILE_IGNORE_NEW_LINES);
-            // var_dump($statements); 
-            $i = 1; 
-            foreach ($statements as $row){
-                echo "<p style='color: rgb(" . $i * 10 .  ", 100, 100)'>";
-                echo $row; 
-                echo "</p>\n";
-                $i++; 
-            }
-            
-            // Testausgabe des Arrays
-            // var_dump($statements);
-            // print_r($statements); 
-    */
-
-
 
         ?>
 <!DOCTYPE html>        
@@ -182,10 +112,17 @@
     </head>
     <body>
         <main role="main">
+        
+        <?php 
+                // if msg is set, show msg in layer 
+                if ($msg != ""){
+                    echo '<div class="alert alert-secondary" role="alert">'; 
+                    echo $msg; 
+                    echo '</div>'; 
+                }
+        ?>
 
         <h1>I say YES to... </h1>
-
-
         <!-- a form tag -->
         <form>
             <div class="row">
@@ -225,48 +162,10 @@
 
         </form>
         <hr style="margin: 40px 0px 40px 0px ">
-        <?php
-
-            echo "<h4>". count($statements) . " unglaublich großartige Sätze sind schon gespeichert!!! Mehr davon!</h4>"; 
-
-
-            /*
-            // Illustration of a for-loom
-            // create a for-loop and read all the elements in $statements
-            for ($i = 0; $i < count($statements); $i++){
-                print_r "<p>" . $statements[$i] . "</p>";
-            }
-
-            */
-            
-            if (count($statements) > 0){
-                // create a foreach-loop... and do the same
-                // for each element in the array statements ... 
-                // each element is accessible as $stmt (variable name can be chosen freely)
-                echo "<table class='table table-striped' style='width: 100%'>";
-                echo "<thead class='thead-dark'>"; 
-                echo "<tr>"; 
-                echo "<th scope='col'>#</th>"; 
-                echo "<th scope='col'>Phrase</th>"; 
-                echo "<th scope='col'>Date</th>"; 
-                echo "</tr>"; 
-                echo "</thead>";                 
-                foreach($statements as $stmt){
-                    echo "<tr>";
-                        echo "<td>" . $stmt['id'] . "</td>";
-                        echo "<td>" . $stmt['phrase'] . "</td>";
-                        echo "<td>" . $stmt['publishdate'] . "</td>";
-                    echo "</tr>";            }
-                echo "</table>";
-            }
-            else {
-                echo "No statements found";
-            }
-        ?>
         </main>
 
         <?php
-            include('footer.inc');
+            include('../footer.inc');
         ?>
 
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
